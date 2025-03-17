@@ -1,0 +1,2 @@
+class Version:
+    ENTROPY_ANALYZER_CURRENT_VERSION = "v0.0.1"
