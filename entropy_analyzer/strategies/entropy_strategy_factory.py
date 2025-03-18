@@ -1,3 +1,19 @@
+"""
+Entropy Strategy Factory Module.
+
+This module provides a factory class for creating entropy calculation strategy instances.
+It implements the Factory pattern to centralize the instantiation of different entropy
+calculation strategies based on data types.
+
+The module is designed to be:
+- Extensible: Easy to add new entropy calculation strategies.
+- Type-safe: Strategy types are validated at runtime.
+- Error-resistant: Built-in validation and error handling.
+
+Author: Aditya Patange (AdiPat)
+License: MIT
+"""
+
 from typing import Any, Optional
 from .entropy_strategy_base import EntropyStrategy
 from .text_entropy import TextEntropy

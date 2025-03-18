@@ -1,21 +1,58 @@
-from typing import Optional
+"""
+Text Entropy Module.
+
+This module implements Shannon's entropy calculation for text analysis by examining
+character frequency distributions. It provides a measure of text complexity and
+randomness based on character usage patterns.
+
+The module is designed to be:
+- Efficient: Uses optimized character frequency analysis.
+- Statistical: Implements Shannon's entropy formula.
+- Normalized: Produces scores between 0 and 1.
+
+Author: Aditya Patange (AdiPat)
+License: MIT
+"""
+
 from collections import Counter
+from typing import Optional
+
 from scipy.stats import entropy
+
 from .entropy_strategy_base import EntropyStrategy
 
 
 class TextEntropy(EntropyStrategy):
-    """Strategy for computing entropy of text data using character frequency.
+    """Strategy for analyzing entropy in text using character frequencies.
 
-    This strategy analyzes the distribution of characters in text to compute
-    an entropy score. It uses Shannon's entropy formula on character frequencies,
-    normalized to produce values between 0 and 1.
+    This strategy implements Shannon's entropy calculation on character
+    distributions within text. It analyzes the frequency of each character
+    to measure the diversity and randomness of character usage.
 
-    Higher scores indicate more diverse character usage and potentially
-    more complex or random text.
+    The entropy score is normalized to produce values between 0 and 1,
+    where higher values indicate more diverse character usage.
+
+    Attributes:
+        None
+
+    Example:
+        >>> analyzer = TextEntropy()
+        >>> score = analyzer.compute_entropy("Some text to analyze")
     """
 
     def compute_entropy(self, text: Optional[str]) -> float:
+        """Compute entropy score for given text using character frequencies.
+
+        Args:
+            text: Input text to analyze. Can be None.
+
+        Returns:
+            float: Normalized entropy score between 0 and 1.
+                Higher scores indicate more diverse character usage.
+
+        Raises:
+            ValueError: If input is neither a string nor None.
+        """
         if not isinstance(text, str) and text is not None:
             raise ValueError("Input must be a string or None")
 

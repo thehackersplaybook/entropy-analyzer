@@ -1,5 +1,21 @@
+"""
+Entropy Strategy Base Module.
+
+This module defines the base abstract class for all entropy calculation strategies.
+It establishes a common interface and contract that all entropy analyzers must follow,
+enabling polymorphic usage of different entropy calculation methods.
+
+The module is designed to be:
+- Abstract: Provides interface definition only.
+- Flexible: Supports various input data types.
+- Consistent: Enforces normalized output range.
+
+Author: Aditya Patange (AdiPat)
+License: MIT
+"""
+
 from abc import ABC, abstractmethod
-from typing import Union, List
+from typing import List, Union
 
 
 class EntropyStrategy(ABC):
