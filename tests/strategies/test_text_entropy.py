@@ -12,7 +12,7 @@ def test_text_entropy_edge_cases():
     analyzer = TextEntropy()
     assert analyzer.compute_entropy(None) == 0.0
     assert analyzer.compute_entropy("") == 0.0
-    assert analyzer.compute_entropy(" ") > 0.0
+    assert analyzer.compute_entropy(" ") == 0.0
 
 
 def test_text_entropy_special_chars():

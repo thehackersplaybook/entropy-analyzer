@@ -42,7 +42,7 @@ class ContextualEntropy(EntropyStrategy):
         >>> score = analyzer.compute_entropy("Some text to analyze")
     """
 
-    def compute_entropy(self, text: Optional[str]) -> float:
+    def compute_entropy(self, text: Optional[str], client: OpenAI = None) -> float:
         """Compute entropy score for given text using contextual analysis.
 
         Args:
@@ -62,7 +62,8 @@ class ContextualEntropy(EntropyStrategy):
             return 0.0
 
         try:
-            client = OpenAI()
+            if not client:
+                client = OpenAI()
             response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
