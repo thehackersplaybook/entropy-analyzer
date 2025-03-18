@@ -1,5 +1,5 @@
 """
-Easy LLM Module.
+LLM Module.
 
 This module provides a clean facade over OpenAI's chat completion API with comprehensive
 parameter support, type safety, and error handling. It simplifies the interaction with
