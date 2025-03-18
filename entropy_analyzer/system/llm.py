@@ -15,7 +15,6 @@ Author: Aditya Patange (AdiPat)
 License: MIT
 """
 
-import os
 import traceback
 from typing import Dict, List, Optional, Union, Any
 from pydantic import BaseModel, Field
@@ -137,6 +136,24 @@ class BaseLLM:
             if not isinstance(input_data, ChatInput)
             else input_data
         )
+
+    def _prepare_structured_request(
+        self, input_data: Union[ChatInput, Dict], response_format: BaseModel
+    ) -> ChatInput:
+        """
+        Prepare and validate the chat input request for structured outputs.
+
+        Args:
+            input_data: Raw input data either as a ChatInput instance or dictionary.
+            response_format: A Pydantic model defining the response structure.
+
+        Returns:
+            ChatInput: A validated ChatInput instance ready for API submission.
+
+        Raises:
+            ValueError: If input data fails validation requirements.
+        """
+        return self._prepare_request(input_data)
 
     def _create_response(self, response: Any) -> ChatResponse:
         """
@@ -266,6 +283,42 @@ class LLM(BaseLLM):
         except Exception as e:
             self._handle_error(e, "Error in generate_response")
 
+    def generate_response_structured(
+        self, input_data: Union[ChatInput, Dict], response_format: BaseModel
+    ) -> Any:
+        """
+        Generate a structured chat completion response synchronously.
+
+        Processes the input data, makes the API request, and returns a validated response
+        that matches the provided Pydantic model schema.
+
+        Args:
+            input_data: Either a ChatInput instance or a dictionary matching ChatInput schema.
+            response_format: A Pydantic model defining the response structure.
+
+        Returns:
+            Any: A validated response object matching the provided schema.
+
+        Raises:
+            ValueError: If input validation fails.
+            RuntimeError: If API request fails or response processing fails.
+            Exception: For any other unexpected errors during execution.
+        """
+        try:
+            chat_input = self._prepare_structured_request(input_data, response_format)
+            self._log_request(chat_input)
+
+            try:
+                response = self.client.chat.completions.parse(
+                    **chat_input.model_dump(exclude_none=True),
+                    response_format=response_format,
+                )
+                return response.choices[0].message.parsed
+            except Exception as e:
+                self._handle_error(e, "Failed to generate structured chat completion")
+        except Exception as e:
+            self._handle_error(e, "Error in generate_response_structured")
+
 
 class AsyncLLM(BaseLLM):
     """
@@ -317,3 +370,39 @@ class AsyncLLM(BaseLLM):
                 self._handle_error(e, "Failed to generate chat completion")
         except Exception as e:
             self._handle_error(e, "Error in generate_response")
+
+    async def generate_response_structured(
+        self, input_data: Union[ChatInput, Dict], response_format: BaseModel
+    ) -> Any:
+        """
+        Generate a structured chat completion response asynchronously.
+
+        Processes the input data, makes the async API request, and returns a validated response
+        that matches the provided Pydantic model schema.
+
+        Args:
+            input_data: Either a ChatInput instance or a dictionary matching ChatInput schema.
+            response_format: A Pydantic model defining the response structure.
+
+        Returns:
+            Any: A validated response object matching the provided schema.
+
+        Raises:
+            ValueError: If input validation fails.
+            RuntimeError: If API request fails or response processing fails.
+            Exception: For any other unexpected errors during execution.
+        """
+        try:
+            chat_input = self._prepare_structured_request(input_data, response_format)
+            self._log_request(chat_input)
+
+            try:
+                response = await self.client.chat.completions.parse(
+                    **chat_input.model_dump(exclude_none=True),
+                    response_format=response_format,
+                )
+                return response.choices[0].message.parsed
+            except Exception as e:
+                self._handle_error(e, "Failed to generate structured chat completion")
+        except Exception as e:
+            self._handle_error(e, "Error in generate_response_structured")

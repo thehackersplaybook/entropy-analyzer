@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import Mock, AsyncMock
+from pydantic import BaseModel
 from openai import OpenAI, AsyncOpenAI
 from entropy_analyzer.system.llm import LLM, AsyncLLM, ChatInput, Message, ChatResponse
 
@@ -18,6 +19,21 @@ MOCK_API_RESPONSE = Mock(
     created=1234567890,
     model="gpt-3.5-turbo",
     usage=Mock(model_dump=lambda: {"total_tokens": 10}),
+)
+
+
+class TestSchema(BaseModel):
+    name: str
+    value: int
+    tags: list[str]
+
+
+MOCK_STRUCTURED_RESPONSE = Mock(
+    choices=[
+        Mock(
+            message=Mock(parsed={"name": "test", "value": 42, "tags": ["tag1", "tag2"]})
+        )
+    ]
 )
 
 
@@ -77,6 +93,28 @@ class TestLLM:
         assert "Generating chat completion with model: gpt-3.5-turbo" in captured.out
         assert "Successfully generated response:" in captured.out
 
+    def test_structured_response_generation(self, mock_openai):
+        mock_openai.chat.completions.parse.return_value = MOCK_STRUCTURED_RESPONSE
+        llm = LLM(client=mock_openai)
+        response = llm.generate_response_structured(SAMPLE_CHAT_INPUT, TestSchema)
+
+        assert isinstance(response, dict)
+        assert response["name"] == "test"
+        assert response["value"] == 42
+        assert len(response["tags"]) == 2
+        mock_openai.chat.completions.parse.assert_called_once()
+
+    def test_structured_response_error(self, mock_openai):
+        mock_openai.chat.completions.parse.side_effect = Exception(
+            "Schema validation failed"
+        )
+        llm = LLM(client=mock_openai)
+
+        try:
+            llm.generate_response_structured(SAMPLE_CHAT_INPUT, TestSchema)
+        except Exception as e:
+            assert "Failed to generate structured chat completion" in str(e)
+
 
 class TestAsyncLLM:
     @pytest.mark.asyncio
@@ -108,6 +146,32 @@ class TestAsyncLLM:
                 str(e)
                 == "Error in generate_response: Failed to generate chat completion: API Error"
             )
+
+    @pytest.mark.asyncio
+    async def test_structured_async_response_generation(self, mock_async_openai):
+        mock_async_openai.chat.completions.parse.return_value = MOCK_STRUCTURED_RESPONSE
+        async_llm = AsyncLLM(client=mock_async_openai)
+        response = await async_llm.generate_response_structured(
+            SAMPLE_CHAT_INPUT, TestSchema
+        )
+
+        assert isinstance(response, dict)
+        assert response["name"] == "test"
+        assert response["value"] == 42
+        assert len(response["tags"]) == 2
+        mock_async_openai.chat.completions.parse.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_structured_async_response_error(self, mock_async_openai):
+        mock_async_openai.chat.completions.parse.side_effect = Exception(
+            "Schema validation failed"
+        )
+        async_llm = AsyncLLM(client=mock_async_openai)
+
+        try:
+            await async_llm.generate_response_structured(SAMPLE_CHAT_INPUT, TestSchema)
+        except Exception as e:
+            assert "Failed to generate structured chat completion" in str(e)
 
     def test_chat_input_model_validation(self):
         valid_message = Message(role="user", content="test")
